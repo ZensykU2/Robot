@@ -3,11 +3,10 @@
 
 from pybricks.hubs import EV3Brick
 from pybricks.ev3devices import UltrasonicSensor, GyroSensor, Motor
-from pybricks.parameters import Port, Color, Direction
+from pybricks.parameters import Port, Color, Direction, Stop
 from pybricks.robotics import DriveBase
 from pybricks.tools import wait
 
-# Initialisierung
 ev3 = EV3Brick()
 ultra = UltrasonicSensor(Port.S4)
 gyro = GyroSensor(Port.S2, direction=Direction.CLOCKWISE)
@@ -22,6 +21,7 @@ drive = DriveBase(left_motor, right_motor, wheel_diameter, axle_track)
 PATROL_DISTANCE = 400  # mm pro Seite
 ALARM_DISTANCE = 100   # mm (10 cm)
 SPEED = 150            # mm/s
+TURN_SPEED = 100       # Drehgeschwindigkeit °/s
 
 gyro.reset_angle(0)
 
@@ -31,57 +31,87 @@ def check_intruder():
 def trigger_alarm():
     drive.stop()
     
-    ev3.screen.clear()
-    ev3.screen.draw_text(20, 40, "!!! WARNUNG !!!")
-    ev3.screen.draw_text(10, 60, "Eindringling erkannt!")
+    for i in range(5):
+        ev3.screen.clear()
+        ev3.screen.draw_text(20, 30, "!!! WARNUNG !!!")
+        ev3.screen.draw_text(10, 50, "Eindringling!")
+        ev3.screen.draw_text(15, 70, "Abstand: {} cm".format(ultra.distance() // 10))
+        
+        ev3.light.on(Color.RED)
+        ev3.speaker.beep(frequency=1000, duration=200)
+        wait(200)
+        
+        ev3.light.off()
+        wait(200)
     
-    ev3.light.on(Color.RED)
-    ev3.speaker.beep(frequency=1000, duration=300)
-    wait(500)
+    ev3.screen.clear()
+    ev3.screen.print("Weiche zurück...")
+    drive.straight(-100)
+    
+    ev3.light.on(Color.ORANGE)
+    wait(1000)
 
-# Hauptschleife
-ev3.screen.clear()
-ev3.screen.print("Wächter aktiv")
-ev3.light.on(Color.GREEN)
+def turn_90_degrees():
+    target_angle = gyro.angle() + 90
+    
+    left_motor.run(TURN_SPEED)
+    right_motor.run(-TURN_SPEED)
+    
+    while gyro.angle() < target_angle:
+        wait(10)
+    
+    left_motor.stop(Stop.BRAKE)
+    right_motor.stop(Stop.BRAKE)
+    
+    wait(200) 
 
-side_count = 0 
+def patrol_one_side(side_number):
 
-while True:
-    # Vorwärts patrouillieren
     distance_cm = ultra.distance() // 10
     ev3.screen.clear()
     ev3.screen.print("Patrouille")
-    ev3.screen.print("Seite: {}".format(side_count + 1))
+    ev3.screen.print("Seite: {}".format(side_number))
     ev3.screen.print("Abstand: {} cm".format(distance_cm))
+    
+    left_motor.reset_angle(0)
     
     drive.drive(SPEED, 0)
     
-    distance_traveled = 0
-    check_interval = 50
-    
-    # Eine Seite des Quadrats abfahren
-    while distance_traveled < PATROL_DISTANCE:
+    while True:
+        angle = abs(left_motor.angle())
+        driven_mm = (angle / 360) * (wheel_diameter * 3.14159)
+        
+        if driven_mm >= PATROL_DISTANCE:
+            break
+        
         if check_intruder():
             trigger_alarm()
             break
         
-        wait(check_interval)
-        distance_traveled += SPEED * check_interval / 1000
+        wait(50)
     
     drive.stop()
     wait(300)
+
+ev3.screen.clear()
+ev3.screen.print("Wächter aktiv")
+ev3.screen.print("Starte Patrouille...")
+ev3.light.on(Color.GREEN)
+ev3.speaker.beep()
+wait(1000)
+
+side_count = 0
+
+while True:
+    patrol_one_side(side_count + 1)
     
-    # Immer zur nächsten Seite (auch nach Alarm)
-    side_count += 1
-    
-    if side_count >= 4:
-        side_count = 0
+    side_count = (side_count + 1) % 4
     
     ev3.screen.clear()
     ev3.screen.print("Wende...")
+    ev3.screen.print("Gyro: {}°".format(gyro.angle()))
     ev3.light.on(Color.GREEN)
-    drive.turn(90)  
+    
+    turn_90_degrees()
+    
     wait(500)
-
-    # Todo
-    # Es funktioniert noch nicht perfekt, es braucht noch kleine Änderungen, diese im Unterricht ansehen

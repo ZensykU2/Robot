@@ -82,3 +82,6 @@ while True:
     ev3.light.on(Color.GREEN)
     drive.turn(90)  
     wait(500)
+
+    # Todo
+    # Es funktioniert noch nicht perfekt, es braucht noch kleine Änderungen, diese im Unterricht ansehen

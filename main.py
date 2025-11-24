@@ -6,13 +6,17 @@ from pybricks.ev3devices import UltrasonicSensor, GyroSensor, Motor
 from pybricks.parameters import Port, Color, Direction, Stop
 from pybricks.robotics import DriveBase
 from pybricks.tools import wait
+from math import pi
 
 ev3 = EV3Brick()
 ultra = UltrasonicSensor(Port.S4)
 gyro = GyroSensor(Port.S2, direction=Direction.CLOCKWISE)
 
+medium_motor = Motor(Port.A)
 left_motor = Motor(Port.B)
 right_motor = Motor(Port.C)
+
+medium_motor.reset_angle(45)
 
 wheel_diameter = 56
 axle_track = 114
@@ -22,7 +26,6 @@ PATROL_DISTANCE = 400  # mm pro Seite
 ALARM_DISTANCE = 100   # mm (10 cm)
 SPEED = 150            # mm/s
 TURN_SPEED = 100       # Drehgeschwindigkeit °/s
-
 gyro.reset_angle(0)
 
 def check_intruder():
@@ -43,6 +46,20 @@ def trigger_alarm():
         
         ev3.light.off()
         wait(200)
+    
+    for i in range(2):
+        medium_motor.run_target(
+        speed=500,          
+        target_angle=90,    
+        then=Stop.HOLD,     
+        wait=True
+        )
+        medium_motor.run_target(
+            speed=500,
+            target_angle=45,
+            then=Stop.COAST,
+            wait=True
+        )
     
     ev3.screen.clear()
     ev3.screen.print("Weiche zurück...")
@@ -79,7 +96,7 @@ def patrol_one_side(side_number):
     
     while True:
         angle = abs(left_motor.angle())
-        driven_mm = (angle / 360) * (wheel_diameter * 3.14159)
+        driven_mm = (angle / 360) * (wheel_diameter * pi)
         
         if driven_mm >= PATROL_DISTANCE:
             break

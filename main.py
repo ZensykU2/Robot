@@ -16,8 +16,6 @@ medium_motor = Motor(Port.A)
 left_motor = Motor(Port.B)
 right_motor = Motor(Port.C)
 
-medium_motor.reset_angle(45)
-
 wheel_diameter = 56
 axle_track = 114
 drive = DriveBase(left_motor, right_motor, wheel_diameter, axle_track)
@@ -26,7 +24,9 @@ PATROL_DISTANCE = 400  # mm pro Seite
 ALARM_DISTANCE = 100   # mm (10 cm)
 SPEED = 150            # mm/s
 TURN_SPEED = 100       # Drehgeschwindigkeit °/s
+
 gyro.reset_angle(0)
+medium_motor.reset_angle(45)
 
 def check_intruder():
     return ultra.distance() < ALARM_DISTANCE
@@ -61,6 +61,7 @@ def trigger_alarm():
             wait=True
         )
     
+    medium_motor.reset_angle(45)
     ev3.screen.clear()
     ev3.screen.print("Weiche zurück...")
     drive.straight(-100)

@@ -1,5 +1,35 @@
 #!/usr/bin/env pybricks-micropython
-# Wächter-Roboter (Security Bot) - Quadrat-Patrouille
+"""
+Wächter-Roboter (Security Bot) - Quadrat-Patrouille
+---------------------------------------------------
+
+Ziel:
+    Der Roboter patrouilliert selbstständig auf einer quadratischen Route
+    und überprüft während der Fahrt mit einem UltraSonic-Sensor, ob sich
+    ein Eindringling (Objekt < 15 cm) im Wachbereich befindet. Wird ein
+    Eindringling erkannt, stoppt der Roboter, löst einen Alarm aus (Licht,
+    Ton, Display) und führt eine kurze Abwehrbewegung aus.
+
+Team:
+    Cristian + Said + Kyano
+
+Verwendete Ports:
+    - Port A : Medium-Motor (Alarm/Greifmotor)
+    - Port B : linker Motor (DriveBase)
+    - Port C : rechter Motor (DriveBase)
+    - Port S2: Gyro-Sensor
+    - Port S4: Ultraschall-Sensor
+
+Startanleitung:
+    1. Roboter auf ebenen Boden stellen, Gyro nullt am Start.
+    2. Skript starten dann beginnt Roboter automatisch mit der Patrouille.
+    3. Wird ein Objekt < 15 cm erkannt, aktiviert sich der Alarmmodus.
+    4. Nach Alarm fährt der Roboter rückwärts und setzt die Patrouille fort.
+
+Hinweise:
+    - Gyro sollte kalibriert starten (nicht bewegen in den ersten 2 Sekunden).
+    - Sensorfehler werden geprüft, der Roboter stoppt sicher bei Problemen.
+"""
 
 from pybricks.hubs import EV3Brick
 from pybricks.ev3devices import UltrasonicSensor, GyroSensor, Motor
@@ -21,9 +51,11 @@ axle_track = 114
 drive = DriveBase(left_motor, right_motor, wheel_diameter, axle_track)
 
 PATROL_DISTANCE = 400  # mm pro Seite
-ALARM_DISTANCE = 100   # mm (10 cm)
+ALARM_DISTANCE = 150   # mm (15 cm)
 SPEED = 150            # mm/s
 TURN_SPEED = 100       # Drehgeschwindigkeit °/s
+MAX_VALID_DISTANCE = 2550  # Oberer Messbereich des UltraSonic Sensor
+MIN_VALID_DISTANCE = 3
 
 gyro.reset_angle(0)
 medium_motor.reset_angle(45)
@@ -120,7 +152,32 @@ wait(1000)
 
 side_count = 0
 
+def sensors_ok():
+    try:
+        dist = ultra.distance()
+        angle = gyro.angle()
+        if (
+            dist is None
+            or dist < MIN_VALID_DISTANCE
+            or dist > MAX_VALID_DISTANCE
+        ):
+            return False
+        float(angle)  # Validierungsprüfung
+        return True
+    except Exception:
+        return False
+
 while True:
+    if not sensors_ok():
+        ev3.screen.clear()
+        ev3.screen.print("Sensorfehler erkannt!")
+        ev3.light.on(Color.RED)
+        ev3.speaker.beep(frequency=400, duration=500)
+        drive.stop()
+        wait(3000)
+        ev3.screen.print("Systemstopp. Bitte prüfen.")
+        break  # Schleife verlassen und Roboter bleibt stehen
+
     patrol_one_side(side_count + 1)
     
     side_count = (side_count + 1) % 4

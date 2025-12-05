@@ -55,7 +55,7 @@ ALARM_DISTANCE = 150   # mm (15 cm)
 SPEED = 150            # mm/s
 TURN_SPEED = 100       # Drehgeschwindigkeit °/s
 MAX_VALID_DISTANCE = 2550  # Oberer Messbereich des UltraSonic Sensor
-MIN_VALID_DISTANCE = 3
+MIN_VALID_DISTANCE = 3  #Unterer Messbereich des UltraSonic Sensor      
 
 gyro.reset_angle(0)
 medium_motor.reset_angle(45)

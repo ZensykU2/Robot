@@ -1,5 +1,8 @@
 #!/usr/bin/env pybricks-micropython
 """
+Team:
+    Cristian + Said + Kyano
+
 Wächter-Roboter (Security Bot) - Quadrat-Patrouille
 ---------------------------------------------------
 
@@ -9,9 +12,6 @@ Ziel:
     ein Eindringling (Objekt < 15 cm) im Wachbereich befindet. Wird ein
     Eindringling erkannt, stoppt der Roboter, löst einen Alarm aus (Licht,
     Ton, Display) und führt eine kurze Abwehrbewegung aus.
-
-Team:
-    Cristian + Said + Kyano
 
 Verwendete Ports:
     - Port A : Medium-Motor (Alarm/Greifmotor)
@@ -29,6 +29,10 @@ Startanleitung:
 Hinweise:
     - Gyro sollte kalibriert starten (nicht bewegen in den ersten 2 Sekunden).
     - Sensorfehler werden geprüft, der Roboter stoppt sicher bei Problemen.
+
+KI-Nutzung:
+    - Wurde verwendet zur tieferen erklärung von den erhaltenen Beispiel Code ausschnitten.
+    - Tipps von der KI mehr "wait" zu verwenden um überlastung zu verhindern, gab oft Probleme damit.
 """
 
 from pybricks.hubs import EV3Brick
